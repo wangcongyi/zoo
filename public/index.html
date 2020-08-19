@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>前端动物园</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+<section>
+    <h2 id="title">please choose your favorite animals first</h2>
+    <div id="user">
+        <img src="images/animals/alpaca.png" alt="alpaca">
+        <img src="images/animals/bat.png" alt="bat">
+        <img src="images/animals/bear.png" alt="bear">
+        <img src="images/animals/butterfly.png" alt="butterfly">
+        <img src="images/animals/camel.png" alt="camel">
+        <img src="images/animals/chickens.png" alt="chickens">
+        <img src="images/animals/coral.png" alt="coral">
+        <img src="images/animals/corgi.png" alt="corgi">
+        <img src="images/animals/crab.png" alt="crab">
+        <img src="images/animals/crocodile.png" alt="crocodile">
+        <img src="images/animals/dolphin.png" alt="dolphin">
+        <img src="images/animals/duck.png" alt="duck">
+        <img src="images/animals/elephant.png" alt="elephant">
+        <img src="images/animals/flamingo.png" alt="flamingo">
+        <img src="images/animals/fox.png" alt="fox">
+        <img src="images/animals/frog.png" alt="frog">
+        <img src="images/animals/giraffe.png" alt="giraffe">
+        <img src="images/animals/gorilla.png" alt="gorilla">
+        <img src="images/animals/hedgehog.png" alt="hedgehog">
+        <img src="images/animals/hippo.png" alt="hippo">
+        <img src="images/animals/horse.png" alt="horse">
+        <img src="images/animals/jellyfish.png" alt="jellyfish">
+        <img src="images/animals/kangaroo.png" alt="kangaroo">
+        <img src="images/animals/leopard.png" alt="leopard">
+        <img src="images/animals/lion.png" alt="lion">
+        <img src="images/animals/monkey.png" alt="monkey">
+        <img src="images/animals/mutton.png" alt="mutton">
+        <img src="images/animals/octopus.png" alt="octopus">
+        <img src="images/animals/otter.png" alt="otter">
+        <img src="images/animals/owl.png" alt="owl">
+        <img src="images/animals/panda.png" alt="panda">
+        <img src="images/animals/parrot.png" alt="parrot">
+        <img src="images/animals/penguin.png" alt="penguin">
+        <img src="images/animals/puffer%20fish.png" alt="puffer%20fish">
+        <img src="images/animals/rabbit.png" alt="rabbit">
+        <img src="images/animals/raccoon.png" alt="raccoon">
+        <img src="images/animals/rhinoceros.png" alt="rhinoceros">
+        <img src="images/animals/scallop.png" alt="scallop">
+        <img src="images/animals/scorpion.png" alt="scorpion">
+        <img src="images/animals/sea%20lion.png" alt="sea%20lion">
+        <img src="images/animals/seal.png" alt="seal">
+        <img src="images/animals/skate.png" alt="skate">
+        <img src="images/animals/skunk.png" alt="skunk">
+        <img src="images/animals/sloth.png" alt="sloth">
+        <img src="images/animals/snails.png" alt="snails">
+        <img src="images/animals/snake.png" alt="snake">
+        <img src="images/animals/spider.png" alt="spider">
+        <img src="images/animals/squirrel.png" alt="squirrel">
+        <img src="images/animals/starfish.png" alt="starfish">
+        <img src="images/animals/tortoise.png" alt="tortoise">
+        <img src="images/animals/toucan.png" alt="toucan">
+        <img src="images/animals/whale.png" alt="whale">
+        <img src="images/animals/wolf.png" alt="wolf">
+        <img src="images/animals/woodpecker.png" alt="woodpecker">
+    </div>
+</section>
+<script src="uuid.js"></script>
+<script>
+  let my = null
+  let u = null
+  let uid = null
+  const user = document.getElementById('user')
+  const wrap = document.querySelector('section')
+  const ws = new WebSocket('ws://172.30.20.227:9000/ws')
+
+  user.addEventListener('dblclick', e => {
+    const img = e.target
+    if (img.tagName.toLowerCase() === 'img') {
+      u = img.getAttribute('alt')
+      uid = uuidv4()
+      ws.send(JSON.stringify({
+        username: u,
+        message: `${u} into the zoo`,
+        type: '1',
+        id: uid,
+      }))
+      document.body.removeChild(wrap)
+    }
+  }, false)
+
+  ws.addEventListener('message', ({data}) => {
+    const d = JSON.parse(data)
+    const {type, username, message, id} = d
+    let other = null
+    if (type === '1') {
+      if (u === username) {
+        my = new Players(username, id)
+        my.init()
+        my.move()
+      } else {
+        other = new Players(username, id)
+        other.init()
+      }
+    }
+    if (type === '2') {
+      other = document.getElementById(id)
+      switch (message) {
+        case 'up':
+          other.style.top = other.offsetTop - 10 + 'px'
+          return
+        case 'left':
+          other.style.left = other.offsetLeft - 10 + 'px'
+          return
+        case 'down':
+          other.style.top = other.offsetTop + 10 + 'px'
+          return
+        case 'right':
+          other.style.left = other.offsetLeft + 10 + 'px'
+      }
+    }
+    if (type === '3') {
+      document.body.removeChild(document.getElementById(id))
+    }
+  })
+  ws.addEventListener('close', () => {
+    ws.send(JSON.stringify({
+      username: u,
+      type: '3',
+    }))
+  }, false)
+  ws.addEventListener('error', err => {
+    console.error(err)
+  }, false)
+
+  const move = (e, username, o) => {
+    switch (e.key) {
+      case 'ArrowUp':
+        o.style.top = o.offsetTop - 10 + 'px'
+        ws.send(JSON.stringify({
+          username,
+          type: '2',
+          message: 'up',
+          id: uid
+        }))
+        return
+      case 'ArrowLeft':
+        o.style.left = o.offsetLeft - 10 + 'px'
+        ws.send(JSON.stringify({
+          username,
+          type: '2',
+          message: 'left',
+          id: uid
+        }))
+        return
+      case 'ArrowDown':
+        o.style.top = o.offsetTop + 10 + 'px'
+        ws.send(JSON.stringify({
+          username,
+          type: '2',
+          message: 'down',
+          id: uid
+        }))
+        return
+      case 'ArrowRight':
+        o.style.left = o.offsetLeft + 10 + 'px'
+        ws.send(JSON.stringify({
+          username,
+          type: '2',
+          message: 'right',
+          id: uid
+        }))
+        return
+    }
+  }
+
+  class Players {
+    constructor(avatar, uid) {
+      this.avatar = avatar
+      this.uid = uid
+      this.o = null
+    }
+
+    init() {
+      this.o = document.createElement('img')
+      this.o.setAttribute('src', `./images/animals/${this.avatar}.png`)
+      this.o.setAttribute('id', this.uid)
+      this.o.style.width = '30px'
+      this.o.style.height = '30px'
+      this.o.style.position = 'absolute'
+      this.o.style.top = '100px'
+      this.o.style.left = '100px'
+      document.body.appendChild(this.o)
+    }
+
+    move() {
+      document.addEventListener('keydown', e => move(e, this.avatar, this.o), false)
+    }
+
+  }
+
+  window.addEventListener('beforeunload', () => {
+    ws.send(JSON.stringify({
+      username: u,
+      type: '3',
+      message: `${u} leave the zoo`
+    }))
+  }, false)
+
+  window.addEventListener('unload', () => {
+    ws.send(JSON.stringify({
+      username: u,
+      type: '3',
+      message: `${u} leave the zoo`
+    }))
+  }, false)
+
+</script>
+</body>
+</html>
